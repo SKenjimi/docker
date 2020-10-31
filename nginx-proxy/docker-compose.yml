@@ -1,0 +1,37 @@
+version: '3.5'
+
+services:
+   nginx-proxy:
+      image: jwilder/nginx-proxy
+      labels:
+         com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: ""
+      restart: always
+      ports:
+         - "80:80"
+         - "443:443"
+      volumes:
+         - ./_data/certs:/etc/nginx/certs:ro 
+         - ./_data/htpasswd:/etc/nginx/htpasswd:ro
+         - ./_data/conf.d:/etc/nginx/conf.d
+         - ./_data/vhost.d:/etc/nginx/vhost.d
+         - ./_data/html:/usr/share/nginx/html
+         - /var/run/docker.sock:/tmp/docker.sock:ro
+         - ./uploadsize.conf:/etc/nginx/conf.d/uploadsize.conf:ro
+
+   letsencrypt-companion:
+      image: jrcs/letsencrypt-nginx-proxy-companion
+      restart: always
+      volumes:
+         - ./_data/certs:/etc/nginx/certs:rw 
+         - ./_data/conf.d:/etc/nginx/conf.d
+         - ./_data/vhost.d:/etc/nginx/vhost.d
+         - ./_data/html:/usr/share/nginx/html
+         - /var/run/docker.sock:/tmp/docker.sock:ro
+      depends_on:
+         - nginx-proxy
+
+networks:
+   default:
+      external:
+         name: nginx-proxy-net
+

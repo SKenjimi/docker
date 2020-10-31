@@ -1,0 +1,41 @@
+version: '3.5'
+
+services:
+   nextcloud_db:
+      image: mariadb
+      command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+      restart: always
+      volumes:
+         - db:/var/lib/mysql
+      environment:
+         MYSQL_ROOT_PASSWORD: Kenji830
+      env_file:
+         - db.env
+
+   nextcloud_app:
+      image: nextcloud:apache
+      restart: always
+      volumes:
+         - app:/var/www/html
+      environment:
+         - MYSQL_HOST=nextcloud_db
+         - VIRTUAL_HOST=nextcloud.example.com
+         - LETSENCRYPT_HOST=nextcloud.example.com
+         - LETSENCRYPT_EMAIL=example@example.com
+      expose:
+         - "80"
+      env_file:
+         - db.env
+      depends_on: 
+         - nextcloud_db
+      ports:
+         - "38080:80"
+
+volumes:
+   db:
+   app:           
+     
+networks:
+   defaults:
+      external:
+         name: nginx-proxy-set 
